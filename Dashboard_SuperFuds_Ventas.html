@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Grandes Superficies · Libertario Coffee</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3e;
+    --accent: #c8a96e;
+    --accent2: #6e9dc8;
+    --accent3: #c86e9d;
+    --exito: #e8b84b;
+    --jumbo: #4bc8e8;
+    --carulla: #e84b7a;
+    --turbo: #7ae84b;
+    --text: #f0ede8;
+    --muted: #7a7a9a;
+    --glow: rgba(200, 169, 110, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0a0a0f 0%, #1a1020 50%, #0a0a0f 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 20%;
+    width: 400px;
+    height: 200px;
+    background: radial-gradient(ellipse, rgba(200,169,110,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-left h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .header-left p {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+  .header-badge {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+  .badge-exito { background: rgba(232,184,75,0.15); color: var(--exito); border: 1px solid rgba(232,184,75,0.3); }
+  .badge-jumbo { background: rgba(75,200,232,0.15); color: var(--jumbo); border: 1px solid rgba(75,200,232,0.3); }
+
+  /* Nav tabs */
+  .nav-tabs {
+    display: flex;
+    gap: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    overflow-x: auto;
+  }
+  .nav-tab {
+    padding: 14px 22px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'DM Mono', monospace;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* Main */
+  .main { padding: 32px 40px; max-width: 1600px; margin: 0 auto; }
+
+  /* Sections */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* KPI Cards */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .kpi-card:hover { border-color: var(--accent); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    border-radius: 3px 0 0 3px;
+  }
+  .kpi-card.gold::before { background: var(--accent); }
+  .kpi-card.blue::before { background: var(--accent2); }
+  .kpi-card.pink::before { background: var(--accent3); }
+  .kpi-card.green::before { background: var(--turbo); }
+
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 10px;
+  }
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .kpi-card.gold .kpi-value { color: var(--accent); }
+  .kpi-card.blue .kpi-value { color: var(--accent2); }
+  .kpi-card.pink .kpi-value { color: var(--accent3); }
+  .kpi-card.green .kpi-value { color: var(--turbo); }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Chart cards */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-grid-2-1 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-grid-1-2 {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .full-width { margin-bottom: 20px; }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+  }
+  .chart-card-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .chart-card-title span.highlight {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0;
+  }
+  canvas { max-width: 100%; }
+
+  /* Toggle $ / Q */
+  .toggle-group {
+    display: flex;
+    gap: 0;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .toggle-btn {
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: 'DM Mono', monospace;
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .toggle-btn.active { background: var(--accent); color: #000; }
+
+  /* Table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+  .data-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+  }
+  .data-table th.right { text-align: right; }
+  .data-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(42,42,62,0.5);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .data-table td.right { text-align: right; }
+  .data-table tr:hover td { background: rgba(200,169,110,0.04); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  .rank-num {
+    font-size: 10px;
+    color: var(--muted);
+    width: 20px;
+    display: inline-block;
+  }
+
+  .bar-inline {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--accent);
+    opacity: 0.7;
+    margin-top: 4px;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Donut legend */
+  .donut-legend {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .donut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+  }
+  .donut-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .donut-legend-pct {
+    margin-left: auto;
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* Canal pill */
+  .canal-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    font-family: 'DM Mono', monospace;
+  }
+  .pill-carulla { background: rgba(232,75,122,0.15); color: var(--carulla); }
+  .pill-exito { background: rgba(232,184,75,0.15); color: var(--exito); }
+  .pill-jumbo { background: rgba(75,200,232,0.15); color: var(--jumbo); }
+  .pill-turbo { background: rgba(122,232,75,0.15); color: var(--turbo); }
+
+  /* Sub header */
+  .sub-header {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media (max-width: 1024px) {
+    .chart-grid-2, .chart-grid-3, .chart-grid-2-1, .chart-grid-1-2 { grid-template-columns: 1fr; }
+    .main { padding: 20px; }
+    .header { padding: 20px; }
+    .nav-tabs { padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <h1>⬡ Grandes Superficies</h1>
+    <p>Libertario Coffee · Sell-Out Dashboard · 2024–2026</p>
+  </div>
+  <div class="header-badge">
+    <span class="badge badge-exito">Grupo Éxito</span>
+    <span class="badge badge-jumbo">Jumbo</span>
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="showSection('general')">General</div>
+  <div class="nav-tab" onclick="showSection('tendencias')">Tendencias</div>
+  <div class="nav-tab" onclick="showSection('canales')">Canales</div>
+  <div class="nav-tab" onclick="showSection('exito')">Grupo Éxito</div>
+  <div class="nav-tab" onclick="showSection('jumbo')">Jumbo</div>
+  <div class="nav-tab" onclick="showSection('productos')">Productos</div>
+  <div class="nav-tab" onclick="showSection('puntos')">Puntos de Venta</div>
+  <div class="nav-tab" onclick="showSection('ciudades')">Ciudades</div>
+</div>
+
+<div class="main">
+
+<!-- ===== GENERAL ===== -->
+<div class="section active" id="section-general">
+  <div class="section-title">Resumen General</div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card gold">
+      <div class="kpi-label">Ventas Totales</div>
+      <div class="kpi-value">$1.568M</div>
+      <div class="kpi-sub">2024 · 2025 · 2026</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Unidades Totales</div>
+      <div class="kpi-value">36.134</div>
+      <div class="kpi-sub">Unidades vendidas</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Grupo Éxito</div>
+      <div class="kpi-value">$1.390M</div>
+      <div class="kpi-sub">88.7% del total · 31.928 uds</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Jumbo</div>
+      <div class="kpi-value">$177M</div>
+      <div class="kpi-sub">11.3% del total · 4.206 uds</div>
+    </div>
+    <div class="kpi-card pink">
+      <div class="kpi-label">Carulla</div>
+      <div class="kpi-value">$967M</div>
+      <div class="kpi-sub">61.7% participación</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Éxito</div>
+      <div class="kpi-value">$368M</div>
+      <div class="kpi-sub">23.5% participación</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Ventas por Canal ($)
+        <span class="highlight">Todos los periodos</span>
+      </div>
+      <canvas id="canalBarTotal" height="250"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Participación por Subcanal
+      </div>
+      <canvas id="donutSubcanal" height="210"></canvas>
+      <div class="donut-legend" id="donutSubcanalLegend"></div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Evolución Anual · Ventas ($)</div>
+      <canvas id="yearBar" height="220"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Evolución Anual · Unidades</div>
+      <canvas id="yearBarQ" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TENDENCIAS ===== -->
+<div class="section" id="section-tendencias">
+  <div class="section-title">Tendencias Mensuales</div>
+
+  <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr)">
+    <div class="kpi-card gold">
+      <div class="kpi-label">Mejor Mes ($)</div>
+      <div class="kpi-value">Feb</div>
+      <div class="kpi-sub">$184M en ventas</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Menor Mes ($)</div>
+      <div class="kpi-value">Abr</div>
+      <div class="kpi-sub">$83M en ventas</div>
+    </div>
+    <div class="kpi-card pink">
+      <div class="kpi-label">Promedio Mensual</div>
+      <div class="kpi-value">$131M</div>
+      <div class="kpi-sub">Todos los canales</div>
+    </div>
+  </div>
+
+  <div class="full-width chart-card">
+    <div class="chart-card-title">
+      Tendencia Mensual · Grupo Éxito vs Jumbo
+      <div class="toggle-group">
+        <button class="toggle-btn active" onclick="toggleTendencia(this,'$')" id="tend-dollar">$</button>
+        <button class="toggle-btn" onclick="toggleTendencia(this,'Q')" id="tend-q">Q</button>
+      </div>
+    </div>
+    <canvas id="tendenciaLine" height="160"></canvas>
+  </div>
+
+  <div class="full-width chart-card">
+    <div class="chart-card-title">Tendencia por Subcanal Éxito (Mensual $)</div>
+    <canvas id="subcanalLine" height="160"></canvas>
+  </div>
+</div>
+
+<!-- ===== CANALES ===== -->
+<div class="section" id="section-canales">
+  <div class="section-title">Mix & Participación por Canal</div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Ventas por Subcanal
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="toggleSubcanal(this,'$')">$</button>
+          <button class="toggle-btn" onclick="toggleSubcanal(this,'Q')">Q</button>
+        </div>
+      </div>
+      <canvas id="subcanalBar" height="280"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Mix de Participación por Subcanal (%)</div>
+      <canvas id="subcanalDonut" height="240"></canvas>
+      <div class="donut-legend" id="subcanalDonutLegend"></div>
+    </div>
+  </div>
+
+  <div class="chart-card full-width">
+    <div class="chart-card-title">Ventas Mensuales por Subcanal (Área apilada $)</div>
+    <canvas id="subcanalStacked" height="180"></canvas>
+  </div>
+</div>
+
+<!-- ===== EXITO ===== -->
+<div class="section" id="section-exito">
+  <div class="section-title">Grupo Éxito · Detalle</div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card gold">
+      <div class="kpi-label">Total Éxito $</div>
+      <div class="kpi-value">$1.390M</div>
+      <div class="kpi-sub">88.7% del total</div>
+    </div>
+    <div class="kpi-card pink">
+      <div class="kpi-label">Carulla $</div>
+      <div class="kpi-value">$967M</div>
+      <div class="kpi-sub">69.6% dentro Éxito · 22.561 uds</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Éxito $</div>
+      <div class="kpi-value">$368M</div>
+      <div class="kpi-sub">26.5% dentro Éxito · 8.111 uds</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Turbo Carulla</div>
+      <div class="kpi-value">$45M</div>
+      <div class="kpi-sub">3.3% dentro Éxito · 1.050 uds</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Ventas Mensuales Éxito ($) por Subcanal</div>
+      <canvas id="exitoLineSubcanal" height="260"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Top 8 PDV · Grupo Éxito ($)</div>
+      <canvas id="exitoPdvBar" height="260"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card full-width">
+    <div class="chart-card-title">Ranking Top PDV · Grupo Éxito</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Punto de Venta</th>
+          <th>Canal</th>
+          <th class="right">Ventas ($)</th>
+          <th class="right">Unidades</th>
+          <th class="right">% del Total Éxito</th>
+        </tr>
+      </thead>
+      <tbody id="exitoPdvTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== JUMBO ===== -->
+<div class="section" id="section-jumbo">
+  <div class="section-title">Jumbo · Detalle</div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">Total Jumbo $</div>
+      <div class="kpi-value">$177M</div>
+      <div class="kpi-sub">11.3% del total</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Total Jumbo Q</div>
+      <div class="kpi-value">4.206</div>
+      <div class="kpi-sub">unidades vendidas</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Top PDV</div>
+      <div class="kpi-value">Santa Ana</div>
+      <div class="kpi-sub">$104M · 58.8% del canal</div>
+    </div>
+    <div class="kpi-card pink">
+      <div class="kpi-label">Ticket Promedio</div>
+      <div class="kpi-value">$42.1K</div>
+      <div class="kpi-sub">Por unidad vendida</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Ventas por PDV · Jumbo ($)</div>
+      <canvas id="jumboPdvBar" height="280"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Tendencia Mensual · Jumbo ($)</div>
+      <canvas id="jumboLine" height="280"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card full-width">
+    <div class="chart-card-title">Ranking PDV · Jumbo</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>PDV</th>
+          <th class="right">Ventas ($)</th>
+          <th class="right">Unidades</th>
+          <th class="right">% del Canal</th>
+          <th>Peso Relativo</th>
+        </tr>
+      </thead>
+      <tbody id="jumboPdvTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== PRODUCTOS ===== -->
+<div class="section" id="section-productos">
+  <div class="section-title">Análisis de Productos</div>
+
+  <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr)">
+    <div class="kpi-card gold">
+      <div class="kpi-label">#1 Producto</div>
+      <div class="kpi-value" style="font-size:16px">Paz en Grano 454g</div>
+      <div class="kpi-sub">$334M · 21.4% del mix</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">#2 Producto</div>
+      <div class="kpi-value" style="font-size:16px">Paz Molido 454g</div>
+      <div class="kpi-sub">$258M · 16.5% del mix</div>
+    </div>
+    <div class="kpi-card pink">
+      <div class="kpi-label">Top 3 = % del Mix</div>
+      <div class="kpi-value">48.5%</div>
+      <div class="kpi-sub">Paz Grano + Paz Molido + Rock Grano</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2-1">
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Top 10 Productos
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="toggleProd(this,'$')">$</button>
+          <button class="toggle-btn" onclick="toggleProd(this,'Q')">Q</button>
+        </div>
+      </div>
+      <canvas id="prodBar" height="300"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Mix de Ventas ($)</div>
+      <canvas id="mixDonut" height="220"></canvas>
+      <div class="donut-legend" id="mixDonutLegend"></div>
+    </div>
+  </div>
+
+  <div class="chart-card full-width">
+    <div class="chart-card-title">Ranking de Productos</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Producto</th>
+          <th class="right">Ventas ($)</th>
+          <th class="right">Unidades</th>
+          <th class="right">% Mix</th>
+          <th>Barra</th>
+        </tr>
+      </thead>
+      <tbody id="prodTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== PUNTOS ===== -->
+<div class="section" id="section-puntos">
+  <div class="section-title">Top Puntos de Venta</div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-title">
+        Top 10 PDV Generales
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="togglePdv(this,'$')">$</button>
+          <button class="toggle-btn" onclick="togglePdv(this,'Q')">Q</button>
+        </div>
+      </div>
+      <canvas id="pdvBar" height="330"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Ranking General</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>PDV</th>
+            <th class="right">Ventas ($)</th>
+            <th class="right">Q</th>
+          </tr>
+        </thead>
+        <tbody id="pdvTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CIUDADES ===== -->
+<div class="section" id="section-ciudades">
+  <div class="section-title">Análisis por Ciudad</div>
+
+  <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr)">
+    <div class="kpi-card gold">
+      <div class="kpi-label">#1 Ciudad</div>
+      <div class="kpi-value">Bogotá</div>
+      <div class="kpi-sub">$1.104M · 70.5% del total</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">#2 Ciudad</div>
+      <div class="kpi-value">Medellín</div>
+      <div class="kpi-sub">$227M · 14.5% del total</div>
+    </div>
+    <div class="kpi-card pink">
+      <div class="kpi-label">#3 Ciudad</div>
+      <div class="kpi-value">Chía</div>
+      <div class="kpi-sub">$64M · 4.1% del total</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-card-title">Ventas por Ciudad ($)</div>
+      <canvas id="cityBar" height="340"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Participación por Ciudad</div>
+      <canvas id="cityDonut" height="240"></canvas>
+      <div class="donut-legend" id="cityDonutLegend"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const D = {
+  mes: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
+  total_v: 1567573992.0,
+  total_q: 36134.0,
+  exito_v: 1390329570.81,
+  exito_q: 31928.0,
+  jumbo_v: 177244421.19,
+  jumbo_q: 4206.0,
+  exito_mes_v: [127681979.22,140752775.93,126104773.37,83186128.0,118652200.0,103036345.0,109945788.0,122962199.0,102829498.67,125335633.73,111299455.36,118542794.53],
+  exito_mes_q: [2727.0,3332.0,2876.0,1857.0,2734.0,2419.0,2671.0,3078.0,2349.0,2858.0,2443.0,2584.0],
+  jumbo_mes_v: [39463834.54,43301442.04,26932099.22,0,0,0,0,0,10910255.0,13399541.24,18755873.6,24481375.55],
+  jumbo_mes_q: [928.0,1014.0,648.0,0,0,0,0,0,256.0,315.0,447.0,598.0],
+  subcanal_n: ["CARULLA","EXITO","JUMBO","TURBO CARULLA","SURTIMAX","SUPER INTER"],
+  subcanal_v: [967358439.83,368404048.74,177244421.19,45457542.24,7870432.0,1239108.0],
+  subcanal_q: [22561.0,8111.0,4206.0,1050.0,180.0,26.0],
+  top_prod_n: ["Paz En Grano LC 454G","Paz Molido LC 454G","Rock En Grano LC 200g","Impacto En Grano LC 340G","Libre En Grano LC 200G","Rock Molido LC 200G","Libre Molido LC 200g","Impacto Molido LC 340G","LC Paz Grano x454g","LC Paz Molido x454g"],
+  top_prod_v: [334867588.4,258491329.16,165595455.64,149479769.24,130634285.7,120757064.21,110076967.59,96904439.11,75108132.28,52992655.55],
+  top_prod_q: [6640.0,5413.0,3795.0,2436.0,4431.0,2902.0,3910.0,1642.0,1483.0,1046.0],
+  top_pdv_n: ["562-CARULLA COUNTRY","JUMBO SANTA ANA","548-CARULLA CALLE 140","537-CARULLA CALLE 63","567-CARULLA PEPE SIERRA","81-EXITO COUNTRY","303-EXITO UNICENTRO BOG","726-CARULLA TESORO","713-CARULLA CALLE 102","525-CARULLA ROSALES"],
+  top_pdv_v: [112898278.92,104112543.35,87349325.72,67356839.21,64930637.8,60212439.0,59519180.75,58673468.99,58047460.0,34128993.31],
+  top_pdv_q: [2601.0,2429.0,2020.0,1627.0,1477.0,1345.0,1338.0,1326.0,1303.0,824.0],
+  city_n: ["Bogotá","Medellín","Chía","Envigado","Cali","Cartagena","Rionegro","Pereira","Barranquilla","Santa Marta"],
+  city_v: [1104361652.16,226950904.97,63919019.26,31985539.0,26826576.09,18565838.0,12021190.0,8569014.0,6451361.0,6097381.0],
+  year_l: [2024,2025,2026],
+  year_v: [178790661.0,1080653756.68,308129574.32],
+  year_q: [4325.0,25049.0,6760.0],
+  mix_n: ["Paz En Grano LC 454G","Paz Molido LC 454G","Rock En Grano LC 200g","Impacto En Grano LC 340G","Libre En Grano LC 200G","Rock Molido LC 200G","Libre Molido LC 200g","Impacto Molido LC 340G","Otros"],
+  mix_pct: [21.4,16.5,10.6,9.5,8.3,7.7,7.0,6.2,12.8],
+  mix_v: [334867588.4,258491329.16,165595455.64,149479769.24,130634285.7,120757064.21,110076967.59,96904439.11,200767092.95],
+  carulla_m: [90302382.0,108195294.0,93214861.99,65505311.0,83007728.0,68344517.0,70014250.0,62491959.0,71781825.52,89700850.32,78836248.0,85963213.0],
+  exito_m: [32937870.99,27968845.77,28822023.0,17121237.0,34120819.0,30749608.0,35865443.0,47213899.0,27026414.99,31179644.99,27311501.0,28086742.0],
+  turbo_m: [4175630.23,4500588.16,3743697.38,559580.0,1523653.0,3778505.0,4066095.0,5605434.0,3884592.16,4245899.42,5040086.36,4333781.53],
+  jumbo_pdv_n: ["JUMBO SANTA ANA","JUMBO SANTA FE","JUMBO HAYUELOS","JUMBO CALLE 80","JUMBO CALLE 170","JUMBO CHIA","JUMBO LIMONAR"],
+  jumbo_pdv_v: [104112543.35,23521491.68,16607624.62,10421066.12,10373928.97,9983995.36,2223771.09],
+  jumbo_pdv_q: [2429.0,579.0,414.0,243.0,253.0,229.0,59.0],
+  exito_pdv_n: ["CARULLA COUNTRY","CARULLA CALLE 140","CARULLA CALLE 63","CARULLA PEPE SIERRA","EXITO COUNTRY","EXITO UNICENTRO","CARULLA TESORO","CARULLA CALLE 102"],
+  exito_pdv_v: [112898278.92,87349325.72,67356839.21,64930637.8,60212439.0,59519180.75,58673468.99,58047460.0],
+  exito_pdv_q: [2601.0,2020.0,1627.0,1477.0,1345.0,1338.0,1326.0,1303.0]
+};
+
+// ============================================================
+// COLORS
+// ============================================================
+const COLORS = {
+  gold: '#c8a96e',
+  blue: '#6e9dc8',
+  pink: '#c86e9d',
+  green: '#7ac86e',
+  cyan: '#6ec8c8',
+  orange: '#c8936e',
+  purple: '#9d6ec8',
+  rose: '#c86e6e',
+  teal: '#6ec8a9'
+};
+const PALETTE = Object.values(COLORS);
+
+const subcanal_colors = {
+  'CARULLA': '#e84b7a',
+  'EXITO': '#e8b84b',
+  'JUMBO': '#4bc8e8',
+  'TURBO CARULLA': '#7ae84b',
+  'SURTIMAX': '#c86e9d',
+  'SUPER INTER': '#6e9dc8'
+};
+
+function fmt(v, q=false) {
+  if (q) return Math.round(v).toLocaleString('es-CO');
+  if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'MM';
+  if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+  return '$' + Math.round(v).toLocaleString('es-CO');
+}
+function pct(v, total) { return ((v/total)*100).toFixed(1) + '%'; }
+
+// ============================================================
+// CHART DEFAULTS
+// ============================================================
+Chart.defaults.color = '#7a7a9a';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+function baseOpts(extra={}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#12121a',
+        borderColor: '#2a2a3e',
+        borderWidth: 1,
+        titleColor: '#c8a96e',
+        bodyColor: '#f0ede8',
+        padding: 10,
+        callbacks: {}
+      }
+    },
+    ...extra
+  };
+}
+
+// ============================================================
+// SECTION NAV
+// ============================================================
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ============================================================
+// BUILD CHARTS
+// ============================================================
+let charts = {};
+
+function buildAll() {
+  buildGeneral();
+  buildTendencias();
+  buildCanales();
+  buildExito();
+  buildJumbo();
+  buildProductos();
+  buildPuntos();
+  buildCiudades();
+}
+
+// ---- GENERAL ----
+function buildGeneral() {
+  // Canal bar
+  const ctx1 = document.getElementById('canalBarTotal').getContext('2d');
+  charts.canalBar = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: ['Grupo Éxito', 'Jumbo'],
+      datasets: [{
+        data: [D.exito_v, D.jumbo_v],
+        backgroundColor: ['rgba(200,169,110,0.8)', 'rgba(110,157,200,0.8)'],
+        borderColor: ['#c8a96e', '#6e9dc8'],
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      ...baseOpts(),
+      scales: {
+        x: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { color: '#7a7a9a' } },
+        y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { color: '#7a7a9a', callback: v => '$' + (v/1e6).toFixed(0) + 'M' } }
+      },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => fmt(c.raw) } } }
+    }
+  });
+
+  // Donut subcanal
+  buildDonut('donutSubcanal', 'donutSubcanalLegend', D.subcanal_n, D.subcanal_v,
+    D.subcanal_n.map(n => subcanal_colors[n] || '#c8a96e'));
+
+  // Year bars
+  const ctx3 = document.getElementById('yearBar').getContext('2d');
+  charts.yearBar = new Chart(ctx3, {
+    type: 'bar',
+    data: {
+      labels: D.year_l,
+      datasets: [{ data: D.year_v, backgroundColor: ['rgba(200,169,110,0.6)','rgba(200,169,110,0.9)','rgba(110,157,200,0.8)'], borderRadius: 6 }]
+    },
+    options: { ...baseOpts(), scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => '$' + (v/1e6).toFixed(0) + 'M' } } }, plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => fmt(c.raw) } } } }
+  });
+
+  const ctx4 = document.getElementById('yearBarQ').getContext('2d');
+  charts.yearBarQ = new Chart(ctx4, {
+    type: 'bar',
+    data: {
+      labels: D.year_l,
+      datasets: [{ data: D.year_q, backgroundColor: ['rgba(110,157,200,0.6)','rgba(110,157,200,0.9)','rgba(200,169,110,0.8)'], borderRadius: 6 }]
+    },
+    options: { ...baseOpts(), scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' } } }, plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => c.raw.toLocaleString('es-CO') + ' uds' } } } }
+  });
+}
+
+// ---- TENDENCIAS ----
+let tendMode = '$';
+function buildTendencias() {
+  buildTendenciaLine();
+
+  // Subcanal line
+  const ctx = document.getElementById('subcanalLine').getContext('2d');
+  charts.subcanalLine = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: D.mes,
+      datasets: [
+        { label: 'CARULLA', data: D.carulla_m, borderColor: '#e84b7a', backgroundColor: 'rgba(232,75,122,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+        { label: 'EXITO', data: D.exito_m, borderColor: '#e8b84b', backgroundColor: 'rgba(232,184,75,0.08)', fill: true, tension: 0.4, pointRadius: 3 },
+        { label: 'TURBO', data: D.turbo_m, borderColor: '#7ae84b', backgroundColor: 'rgba(122,232,75,0.06)', fill: true, tension: 0.4, pointRadius: 3 }
+      ]
+    },
+    options: { ...baseOpts({ plugins: { ...baseOpts().plugins, legend: { display: true, position: 'bottom', labels: { color: '#7a7a9a', padding: 16, boxWidth: 10 } } } }), scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => '$' + (v/1e6).toFixed(0) + 'M' } } } }
+  });
+}
+
+function buildTendenciaLine() {
+  const vd = tendMode === '$' ? D.exito_mes_v : D.exito_mes_q;
+  const jd = tendMode === '$' ? D.jumbo_mes_v : D.jumbo_mes_q;
+  const tickFmt = tendMode === '$' ? v => '$' + (v/1e6).toFixed(0) + 'M' : v => v.toLocaleString();
+  const ttFmt = tendMode === '$' ? v => fmt(v) : v => v.toLocaleString('es-CO') + ' uds';
+
+  if (charts.tendenciaLine) charts.tendenciaLine.destroy();
+  const ctx = document.getElementById('tendenciaLine').getContext('2d');
+  charts.tendenciaLine = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: D.mes,
+      datasets: [
+        { label: 'Grupo Éxito', data: vd, borderColor: '#c8a96e', backgroundColor: 'rgba(200,169,110,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#c8a96e', pointRadius: 4, borderWidth: 2 },
+        { label: 'Jumbo', data: jd, borderColor: '#6e9dc8', backgroundColor: 'rgba(110,157,200,0.1)', fill: true, tension: 0.4, pointBackgroundColor: '#6e9dc8', pointRadius: 4, borderWidth: 2 }
+      ]
+    },
+    options: {
+      ...baseOpts({ plugins: { ...baseOpts().plugins, legend: { display: true, position: 'bottom', labels: { color: '#7a7a9a', padding: 20, boxWidth: 10 } } } }),
+      scales: {
+        x: { grid: { color: 'rgba(42,42,62,0.5)' } },
+        y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: tickFmt } }
+      },
+      plugins: { ...baseOpts().plugins, legend: { display: true, position: 'bottom', labels: { color: '#7a7a9a', padding: 20, boxWidth: 10 } }, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => c.dataset.label + ': ' + ttFmt(c.raw) } } }
+    }
+  });
+}
+
+function toggleTendencia(btn, mode) {
+  tendMode = mode;
+  document.querySelectorAll('#tend-dollar, #tend-q').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildTendenciaLine();
+}
+
+// ---- CANALES ----
+let subcanalMode = '$';
+function buildCanales() {
+  buildSubcanalBar();
+
+  // Donut
+  buildDonut('subcanalDonut', 'subcanalDonutLegend', D.subcanal_n, D.subcanal_v,
+    D.subcanal_n.map(n => subcanal_colors[n] || '#c8a96e'));
+
+  // Stacked area
+  const ctx = document.getElementById('subcanalStacked').getContext('2d');
+  charts.subcanalStacked = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: D.mes,
+      datasets: [
+        { label: 'CARULLA', data: D.carulla_m, borderColor: '#e84b7a', backgroundColor: 'rgba(232,75,122,0.4)', fill: true, tension: 0.4, pointRadius: 2 },
+        { label: 'EXITO', data: D.exito_m, borderColor: '#e8b84b', backgroundColor: 'rgba(232,184,75,0.35)', fill: true, tension: 0.4, pointRadius: 2 },
+        { label: 'TURBO', data: D.turbo_m, borderColor: '#7ae84b', backgroundColor: 'rgba(122,232,75,0.3)', fill: true, tension: 0.4, pointRadius: 2 },
+        { label: 'JUMBO', data: D.jumbo_mes_v, borderColor: '#4bc8e8', backgroundColor: 'rgba(75,200,232,0.25)', fill: true, tension: 0.4, pointRadius: 2 }
+      ]
+    },
+    options: {
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' }, stacked: false, ticks: { callback: v => '$' + (v/1e6).toFixed(0) + 'M' } } },
+      plugins: { ...baseOpts().plugins, legend: { display: true, position: 'bottom', labels: { color: '#7a7a9a', padding: 16, boxWidth: 10 } } }
+    }
+  });
+}
+
+function buildSubcanalBar() {
+  const vals = subcanalMode === '$' ? D.subcanal_v : D.subcanal_q;
+  const tickFmt = subcanalMode === '$' ? v => '$' + (v/1e6).toFixed(0) + 'M' : v => v.toLocaleString();
+  if (charts.subcanalBar) charts.subcanalBar.destroy();
+  const ctx = document.getElementById('subcanalBar').getContext('2d');
+  charts.subcanalBar = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: D.subcanal_n,
+      datasets: [{ data: vals, backgroundColor: D.subcanal_n.map(n => (subcanal_colors[n]||'#c8a96e') + 'cc'), borderColor: D.subcanal_n.map(n => subcanal_colors[n]||'#c8a96e'), borderWidth: 1, borderRadius: 6 }]
+    },
+    options: {
+      indexAxis: 'y',
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: tickFmt } }, y: { grid: { color: 'rgba(42,42,62,0.5)' } } },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => subcanalMode === '$' ? fmt(c.raw) : c.raw.toLocaleString('es-CO') + ' uds' } } }
+    }
+  });
+}
+
+function toggleSubcanal(btn, mode) {
+  subcanalMode = mode;
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildSubcanalBar();
+}
+
+// ---- EXITO ----
+function buildExito() {
+  // Line subcanal
+  const ctx1 = document.getElementById('exitoLineSubcanal').getContext('2d');
+  charts.exitoLine = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: D.mes,
+      datasets: [
+        { label: 'CARULLA', data: D.carulla_m, borderColor: '#e84b7a', backgroundColor: 'rgba(232,75,122,0.1)', fill: false, tension: 0.4, pointRadius: 3, borderWidth: 2 },
+        { label: 'EXITO', data: D.exito_m, borderColor: '#e8b84b', backgroundColor: 'rgba(232,184,75,0.1)', fill: false, tension: 0.4, pointRadius: 3, borderWidth: 2 },
+        { label: 'TURBO', data: D.turbo_m, borderColor: '#7ae84b', backgroundColor: 'rgba(122,232,75,0.1)', fill: false, tension: 0.4, pointRadius: 3, borderWidth: 2 }
+      ]
+    },
+    options: {
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => '$' + (v/1e6).toFixed(0) + 'M' } } },
+      plugins: { ...baseOpts().plugins, legend: { display: true, position: 'bottom', labels: { color: '#7a7a9a', padding: 16, boxWidth: 10 } } }
+    }
+  });
+
+  // PDV bar horizontal
+  const ctx2 = document.getElementById('exitoPdvBar').getContext('2d');
+  charts.exitoPdvBar = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: D.exito_pdv_n,
+      datasets: [{ data: D.exito_pdv_v, backgroundColor: 'rgba(200,169,110,0.7)', borderColor: '#c8a96e', borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => '$' + (v/1e6).toFixed(0) + 'M' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' } } },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => fmt(c.raw) } } }
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById('exitoPdvTable');
+  D.exito_pdv_n.forEach((n, i) => {
+    const pctVal = ((D.exito_pdv_v[i] / D.exito_v) * 100).toFixed(1);
+    const canal = n.includes('CARULLA') || n.includes('TURBO') ? 'CARULLA' : 'EXITO';
+    const pillClass = canal === 'CARULLA' ? 'pill-carulla' : 'pill-exito';
+    tbody.innerHTML += `<tr>
+      <td><span class="rank-num">${i+1}</span></td>
+      <td>${n}</td>
+      <td><span class="canal-pill ${pillClass}">${canal}</span></td>
+      <td class="right">${fmt(D.exito_pdv_v[i])}</td>
+      <td class="right">${D.exito_pdv_q[i].toLocaleString('es-CO')}</td>
+      <td class="right">${pctVal}%</td>
+    </tr>`;
+  });
+}
+
+// ---- JUMBO ----
+function buildJumbo() {
+  // PDV bar
+  const ctx1 = document.getElementById('jumboPdvBar').getContext('2d');
+  charts.jumboPdvBar = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: D.jumbo_pdv_n,
+      datasets: [{ data: D.jumbo_pdv_v, backgroundColor: 'rgba(75,200,232,0.7)', borderColor: '#4bc8e8', borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => '$' + (v/1e6).toFixed(0) + 'M' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' } } },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => fmt(c.raw) } } }
+    }
+  });
+
+  // Line trend
+  const ctx2 = document.getElementById('jumboLine').getContext('2d');
+  charts.jumboLine = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: D.mes,
+      datasets: [{ label: 'Jumbo $', data: D.jumbo_mes_v, borderColor: '#6e9dc8', backgroundColor: 'rgba(110,157,200,0.15)', fill: true, tension: 0.4, pointBackgroundColor: '#6e9dc8', pointRadius: 4, borderWidth: 2 }]
+    },
+    options: {
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => '$' + (v/1e6).toFixed(0) + 'M' } } },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => fmt(c.raw) } } }
+    }
+  });
+
+  // Table
+  const tbody = document.getElementById('jumboPdvTable');
+  const maxV = Math.max(...D.jumbo_pdv_v);
+  D.jumbo_pdv_n.forEach((n, i) => {
+    if (D.jumbo_pdv_v[i] === 0) return;
+    const pctVal = ((D.jumbo_pdv_v[i] / D.jumbo_v) * 100).toFixed(1);
+    const barW = ((D.jumbo_pdv_v[i] / maxV) * 100).toFixed(0);
+    tbody.innerHTML += `<tr>
+      <td><span class="rank-num">${i+1}</span></td>
+      <td>${n}</td>
+      <td class="right">${fmt(D.jumbo_pdv_v[i])}</td>
+      <td class="right">${D.jumbo_pdv_q[i].toLocaleString('es-CO')}</td>
+      <td class="right">${pctVal}%</td>
+      <td style="width:120px"><div class="bar-inline" style="width:${barW}%;background:#4bc8e8"></div></td>
+    </tr>`;
+  });
+}
+
+// ---- PRODUCTOS ----
+let prodMode = '$';
+function buildProductos() {
+  buildProdBar();
+  buildDonut('mixDonut', 'mixDonutLegend', D.mix_n, D.mix_pct, PALETTE.slice(0,9), true);
+
+  // Table
+  const tbody = document.getElementById('prodTable');
+  const maxV = Math.max(...D.top_prod_v);
+  D.top_prod_n.forEach((n, i) => {
+    const pctVal = ((D.top_prod_v[i] / D.total_v) * 100).toFixed(1);
+    const barW = ((D.top_prod_v[i] / maxV) * 100).toFixed(0);
+    tbody.innerHTML += `<tr>
+      <td><span class="rank-num">${i+1}</span></td>
+      <td>${n}</td>
+      <td class="right">${fmt(D.top_prod_v[i])}</td>
+      <td class="right">${D.top_prod_q[i].toLocaleString('es-CO')}</td>
+      <td class="right">${pctVal}%</td>
+      <td style="width:120px"><div class="bar-inline" style="width:${barW}%"></div></td>
+    </tr>`;
+  });
+}
+
+function buildProdBar() {
+  const vals = prodMode === '$' ? D.top_prod_v : D.top_prod_q;
+  const tickFmt = prodMode === '$' ? v => '$' + (v/1e6).toFixed(0) + 'M' : v => v.toLocaleString();
+  if (charts.prodBar) charts.prodBar.destroy();
+  const ctx = document.getElementById('prodBar').getContext('2d');
+  charts.prodBar = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: D.top_prod_n,
+      datasets: [{ data: vals, backgroundColor: PALETTE.map(c => c + 'bb'), borderColor: PALETTE, borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: tickFmt } }, y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { font: { size: 10 } } } },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => prodMode === '$' ? fmt(c.raw) : c.raw.toLocaleString('es-CO') + ' uds' } } }
+    }
+  });
+}
+
+function toggleProd(btn, mode) {
+  prodMode = mode;
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildProdBar();
+}
+
+// ---- PUNTOS ----
+let pdvMode = '$';
+function buildPuntos() {
+  buildPdvBar();
+
+  const tbody = document.getElementById('pdvTable');
+  D.top_pdv_n.forEach((n, i) => {
+    const canal = n.includes('CARULLA') ? 'CARULLA' : n.includes('EXITO') ? 'EXITO' : n.includes('JUMBO') ? 'JUMBO' : 'OTRO';
+    const pillClass = { CARULLA:'pill-carulla', EXITO:'pill-exito', JUMBO:'pill-jumbo' }[canal] || '';
+    tbody.innerHTML += `<tr>
+      <td><span class="rank-num">${i+1}</span></td>
+      <td><span class="canal-pill ${pillClass}">${canal}</span> ${n.replace(/^\d+-/,'').replace(/^(CARULLA|EXITO|JUMBO)\s+/i,'')}</td>
+      <td class="right">${fmt(D.top_pdv_v[i])}</td>
+      <td class="right">${D.top_pdv_q[i].toLocaleString('es-CO')}</td>
+    </tr>`;
+  });
+}
+
+function buildPdvBar() {
+  const vals = pdvMode === '$' ? D.top_pdv_v : D.top_pdv_q;
+  if (charts.pdvBar) charts.pdvBar.destroy();
+  const ctx = document.getElementById('pdvBar').getContext('2d');
+  charts.pdvBar = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: D.top_pdv_n.map(n => n.replace(/^\d+-/,'')),
+      datasets: [{ data: vals, backgroundColor: PALETTE.map(c => c + 'bb'), borderColor: PALETTE, borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => pdvMode === '$' ? '$' + (v/1e6).toFixed(0) + 'M' : v.toLocaleString() } }, y: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { font: { size: 10 } } } },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => pdvMode === '$' ? fmt(c.raw) : c.raw.toLocaleString('es-CO') + ' uds' } } }
+    }
+  });
+}
+
+function togglePdv(btn, mode) {
+  pdvMode = mode;
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  buildPdvBar();
+}
+
+// ---- CIUDADES ----
+function buildCiudades() {
+  const ctx1 = document.getElementById('cityBar').getContext('2d');
+  charts.cityBar = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: D.city_n,
+      datasets: [{ data: D.city_v, backgroundColor: PALETTE.map(c => c + 'bb'), borderColor: PALETTE, borderWidth: 1, borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y',
+      ...baseOpts(),
+      scales: { x: { grid: { color: 'rgba(42,42,62,0.5)' }, ticks: { callback: v => '$' + (v/1e9).toFixed(2) + 'MM' } }, y: { grid: { color: 'rgba(42,42,62,0.5)' } } },
+      plugins: { ...baseOpts().plugins, tooltip: { ...baseOpts().plugins.tooltip, callbacks: { label: c => fmt(c.raw) } } }
+    }
+  });
+
+  // Donut
+  buildDonut('cityDonut', 'cityDonutLegend', D.city_n, D.city_v, PALETTE.slice(0,10));
+}
+
+// ---- DONUT HELPER ----
+function buildDonut(canvasId, legendId, labels, values, colors, isPct=false) {
+  const total = values.reduce((a, b) => a + b, 0);
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{ data: values, backgroundColor: colors.map(c => c + 'cc'), borderColor: colors, borderWidth: 1, hoverOffset: 6 }]
+    },
+    options: {
+      cutout: '62%',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#12121a', borderColor: '#2a2a3e', borderWidth: 1,
+          titleColor: '#c8a96e', bodyColor: '#f0ede8', padding: 10,
+          callbacks: {
+            label: c => {
+              const pctVal = ((c.raw / total) * 100).toFixed(1) + '%';
+              return isPct ? `${c.label}: ${c.raw}%` : `${c.label}: ${fmt(c.raw)} (${pctVal})`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Legend
+  const leg = document.getElementById(legendId);
+  if (!leg) return;
+  leg.innerHTML = '';
+  labels.forEach((l, i) => {
+    const pctVal = ((values[i] / total) * 100).toFixed(1);
+    leg.innerHTML += `<div class="donut-legend-item">
+      <div class="donut-legend-dot" style="background:${colors[i]}"></div>
+      <span>${l}</span>
+      <span class="donut-legend-pct">${isPct ? values[i] + '%' : pctVal + '%'}</span>
+    </div>`;
+  });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', buildAll);
+</script>
+</body>
+</html>
