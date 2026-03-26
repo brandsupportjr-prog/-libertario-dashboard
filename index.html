@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Libertario Coffee Roasters — Dashboard en vivo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg:#f7f5f0; --surface:#fff; --surface2:#f0ede6; --border:rgba(0,0,0,0.09);
+    --text:#1a1814; --muted:#6b6860; --accent:#0f2a4a; --accent2:#4a90d9;
+    --green:#2d7a4f; --red:#c0392b; --blue:#2563aa;
+    --C0:#2d7a4f;--C1:#c8841a;--C2:#2563aa;--C3:#8b3a8b;--C4:#c0392b;--C5:#1a7a7a;--C6:#8b6914;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;}
+  .shell{display:flex;min-height:100vh;}
+  .sidebar{width:220px;background:var(--accent);color:#fff;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto;}
+  .main{margin-left:220px;padding:28px 32px;min-height:100vh;}
+  @media(max-width:768px){.sidebar{width:100%;height:auto;position:relative;}.main{margin-left:0;padding:16px;}}
+  .logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,.12);}
+  .logo h2{font-size:15px;font-weight:600;}
+  .logo p{font-size:11px;opacity:.6;margin-top:3px;}
+  .nav{padding:12px 0;flex:1;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;cursor:pointer;color:rgba(255,255,255,.7);transition:all .15s;border-left:3px solid transparent;}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff;}
+  .nav-item.active{background:rgba(255,255,255,.13);color:#fff;border-left-color:var(--accent2);}
+  .nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+  .sidebar-footer{padding:14px 20px;font-size:11px;opacity:.4;border-top:1px solid rgba(255,255,255,.1);}
+  .section{display:none;}.section.active{display:block;}
+  .page-title{font-size:22px;font-weight:700;margin-bottom:4px;}
+  .page-sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+  .card .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+  .card .val{font-size:22px;font-weight:700;line-height:1;margin-bottom:4px;}
+  .card .sub{font-size:12px;color:var(--muted);}
+  .bdg{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:6px;}
+  .bdg.up{background:#d4edda;color:#155724;}.bdg.dn{background:#f8d7da;color:#721c24;}
+  .bdg.neu{background:#d1ecf1;color:#0c5460;}.bdg.warn{background:#fff3cd;color:#856404;}
+  .box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+  .bt{font-size:14px;font-weight:600;margin-bottom:14px;}
+  .btsub{font-size:12px;color:var(--muted);margin-top:-10px;margin-bottom:14px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  @media(max-width:640px){.row2,.row3{grid-template-columns:1fr;}}
+  .cw{position:relative;width:100%;}
+  .br{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+  .br:last-child{border-bottom:none;}
+  .bn{font-size:12px;min-width:130px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bb{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+  .bf{height:100%;border-radius:4px;}
+  .bv{font-size:11px;color:var(--muted);min-width:55px;text-align:right;}
+  .lg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-bottom:10px;}
+  .dot{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0;}
+  .t10{width:100%;border-collapse:collapse;font-size:12px;}
+  .t10 th{font-size:11px;font-weight:600;color:var(--muted);text-align:left;padding:0 10px 10px 0;border-bottom:2px solid var(--border);text-transform:uppercase;letter-spacing:.4px;}
+  .t10 th.r,.t10 td.r{text-align:right;}
+  .t10 td{padding:9px 10px 9px 0;border-bottom:1px solid var(--border);vertical-align:middle;}
+  .t10 tr:last-child td{border-bottom:none;}
+  .t10 td.r{font-size:11px;color:var(--muted);}
+  .t10 tr:hover td{background:var(--surface2);}
+  .pill{display:inline-block;font-size:10px;padding:2px 6px;border-radius:20px;font-weight:600;margin-left:5px;}
+  .sp{display:flex;align-items:flex-end;gap:2px;height:24px;}
+  .sb{width:9px;border-radius:2px 2px 0 0;}
+  .pb{width:100%;height:14px;background:var(--surface2);border-radius:7px;overflow:hidden;margin:8px 0 5px;}
+  .pf{height:100%;border-radius:7px;transition:width .5s;}
+  .ppto-input{width:200px;padding:9px 12px;font-size:15px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;}
+  .ppto-input:focus{border-color:var(--accent);}
+  .ppto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+  .pc{background:var(--surface2);border-radius:var(--radius);padding:14px 16px;}
+  .pc .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+  .pc .val{font-size:20px;font-weight:700;}
+  .pc .sub{font-size:11px;color:var(--muted);margin-top:3px;}
+  .cat-btn{padding:8px 14px;font-size:12px;font-weight:600;border:none;border-radius:20px;cursor:pointer;color:#fff;opacity:.55;transition:opacity .15s,transform .1s;}
+  .cat-btn:hover{opacity:.8;}
+  .cat-btn.active{opacity:1;transform:scale(1.05);box-shadow:0 2px 8px rgba(0,0,0,.2);}
+
+  /* ── Loading overlay ── */
+  #loadingOverlay{position:fixed;inset:0;background:rgba(15,42,74,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;gap:16px;}
+  #loadingOverlay.hidden{display:none;}
+  .spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #loadMsg{font-size:14px;opacity:.8;}
+  #loadDetail{font-size:12px;opacity:.5;}
+
+  /* ── Error banner ── */
+  #errorBanner{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb;border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:none;font-size:13px;}
+  #errorBanner strong{font-weight:700;}
+
+  /* ── Live badge ── */
+  .live-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;background:rgba(255,255,255,.12);padding:4px 10px;border-radius:20px;margin-top:6px;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+  /* ── Last updated ── */
+  #lastUpdated{font-size:11px;opacity:.5;margin-top:4px;}
+
+  ::-webkit-scrollbar{width:5px;height:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div id="loadMsg">Conectando con Odoo...</div>
+  <div id="loadDetail">libertariocoffee.odoo.com</div>
+</div>
+
+<!-- Error banner (inside main, shown if needed) -->
+
+<div class="shell">
+<nav class="sidebar">
+  <div class="logo">
+    <h2>☕ Libertario</h2>
+    <p>Dashboard en vivo</p>
+    <div class="live-badge"><span class="live-dot"></span>Odoo conectado</div>
+    <div id="lastUpdated"></div>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" onclick="go('resumen',this)"><span class="nav-icon">◈</span> Resumen</div>
+    <div class="nav-item" onclick="go('ppto',this)"><span class="nav-icon">◎</span> Presupuesto</div>
+    <div class="nav-item" onclick="go('tiendas',this)"><span class="nav-icon">⊞</span> Tiendas</div>
+    <div class="nav-item" onclick="go('top10',this)"><span class="nav-icon">★</span> Top 10 productos</div>
+    <div class="nav-item" onclick="go('cats',this)"><span class="nav-icon">▤</span> Categorías</div>
+    <div class="nav-item" onclick="go('topcat',this)"><span class="nav-icon">⊛</span> Top por categoría</div>
+    <div class="nav-item" onclick="go('tend',this)"><span class="nav-icon">∿</span> Tendencia</div>
+  </div>
+  <div style="padding:12px 20px;">
+    <button onclick="reloadData()" style="width:100%;padding:9px;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">⟳ Actualizar datos</button>
+  </div>
+  <div class="sidebar-footer">Datos en tiempo real · Odoo POS</div>
+</nav>
+
+<main class="main">
+  <div id="errorBanner"><strong>⚠ Error de conexión:</strong> <span id="errorMsg"></span></div>
+
+  <!-- RESUMEN -->
+  <div class="section active" id="tab-resumen">
+    <div class="page-title">Resumen general</div>
+    <div class="page-sub" id="resumenSub">Cargando datos...</div>
+    <div class="cards" id="resumenCards"></div>
+    <div class="row2">
+      <div class="box"><div class="bt">Ventas por tienda · periodo actual</div><div class="cw" style="height:260px"><canvas id="c_ti_bar"></canvas></div></div>
+      <div class="box"><div class="bt">Ventas por categoría</div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div class="cw" style="height:220px;flex:1"><canvas id="c_cat_dona"></canvas></div>
+          <div id="leg_dona" style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px;justify-content:center;min-width:110px;padding-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="box"><div class="bt">Ventas diarias · últimos 30 días</div><div class="cw" style="height:220px"><canvas id="c_daily"></canvas></div></div>
+  </div>
+
+  <!-- PRESUPUESTO -->
+  <div class="section" id="tab-ppto">
+    <div class="page-title">Presupuesto</div>
+    <div class="page-sub">Compara tus ventas reales contra tu objetivo</div>
+    <div class="box">
+      <div class="bt">Define tu objetivo del periodo</div>
+      <p class="btsub">Ventas acumuladas cargadas desde Odoo. Ingresa tu meta en millones de COP.</p>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <input class="ppto-input" id="ppI" type="number" placeholder="Ej: 1500" oninput="calcP()">
+        <span style="font-size:13px;color:var(--muted)">millones COP</span>
+      </div>
+      <div class="ppto-grid">
+        <div class="pc"><div class="lbl">Ventas reales</div><div class="val" id="pptoReal">—</div><div class="sub">desde Odoo</div></div>
+        <div class="pc"><div class="lbl">Presupuesto</div><div class="val" id="pV">—</div><div class="sub">ingresa arriba</div></div>
+        <div class="pc"><div class="lbl">% completado</div><div class="val" id="pPct">—</div><div class="sub" id="pSt">define arriba</div></div>
+        <div class="pc"><div class="lbl">Diferencia</div><div class="val" id="pDf">—</div><div class="sub" id="pDs">vs objetivo</div></div>
+      </div>
+      <div style="font-weight:600;font-size:13px;margin-bottom:5px" id="pLb">Progreso</div>
+      <div class="pb"><div class="pf" id="pBar" style="width:0%;background:var(--accent)"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px"><span>$0</span><span id="pMid">—</span><span id="pMax">—</span></div>
+    </div>
+    <div class="box"><div class="bt">Ventas mensuales vs presupuesto sugerido</div><div class="cw" style="height:220px"><canvas id="cPpMes"></canvas></div></div>
+  </div>
+
+  <!-- TIENDAS -->
+  <div class="section" id="tab-tiendas">
+    <div class="page-title">Tiendas</div>
+    <div class="page-sub">Ventas por punto de venta · datos en vivo desde Odoo</div>
+    <div class="box"><div class="bt">Ranking de ventas · periodo actual</div><div id="tiB"></div></div>
+    <div class="box">
+      <div class="bt">Evolución mensual por tienda</div>
+      <div class="lg"><span><span class="dot" style="background:#2d7a4f"></span>Mes -2</span><span><span class="dot" style="background:#c8841a"></span>Mes -1</span><span><span class="dot" style="background:#2563aa"></span>Mes actual</span></div>
+      <div class="cw" style="height:360px"><canvas id="cTi"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TOP 10 -->
+  <div class="section" id="tab-top10">
+    <div class="page-title">Top 10 productos</div>
+    <div class="page-sub">Productos más vendidos · datos en tiempo real</div>
+    <div class="cards" id="top10Cards"></div>
+    <div class="box"><div class="bt">Top 10 · por ventas COP</div><div style="overflow-x:auto"><table class="t10" id="t10c"></table></div></div>
+    <div class="box"><div class="bt">Top 10 · por unidades</div><div style="overflow-x:auto"><table class="t10" id="t10u"></table></div></div>
+  </div>
+
+  <!-- CATEGORÍAS -->
+  <div class="section" id="tab-cats">
+    <div class="page-title">Categorías</div>
+    <div class="page-sub">Ventas por categoría de producto · datos en vivo</div>
+    <div class="box"><div class="bt">Ventas por categoría</div><div id="catBarsF"></div></div>
+    <div class="row2">
+      <div class="box"><div class="bt">Unidades por categoría</div><div class="cw" style="height:220px"><canvas id="cCU"></canvas></div></div>
+      <div class="box"><div class="bt">Distribución de ventas</div><div class="cw" style="height:220px"><canvas id="cCatDona2"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- TOP POR CATEGORÍA -->
+  <div class="section" id="tab-topcat">
+    <div class="page-title">Top por categoría</div>
+    <div class="page-sub">Selecciona una categoría para ver sus productos</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px" id="catTabs"></div>
+    <div id="catPanelTitle" style="font-size:18px;font-weight:700;margin-bottom:16px;"></div>
+    <div class="cards" id="catSummaryCards" style="margin-bottom:20px;"></div>
+    <div class="row2" style="margin-bottom:16px;">
+      <div class="box"><div class="bt">Ventas COP</div><div class="cw" style="height:240px"><canvas id="cCatProd"></canvas></div></div>
+      <div class="box"><div class="bt">Unidades vendidas</div><div class="cw" style="height:240px"><canvas id="cCatUnidProd"></canvas></div></div>
+    </div>
+    <div class="box"><div class="bt">Detalle completo</div><div style="overflow-x:auto"><table class="t10" id="tCatDetail"></table></div></div>
+  </div>
+
+  <!-- TENDENCIA -->
+  <div class="section" id="tab-tend">
+    <div class="page-title">Tendencia</div>
+    <div class="page-sub">Comportamiento de ventas en el tiempo</div>
+    <div class="box"><div class="bt">Ventas diarias · últimos 90 días</div><div class="cw" style="height:240px"><canvas id="cTnd90"></canvas></div></div>
+    <div class="box"><div class="bt">Variación % por tienda · mes anterior vs actual</div><div class="cw" style="height:280px"><canvas id="cVar"></canvas></div></div>
+    <div class="box"><div class="bt">Comportamiento por tienda</div><div id="tRes" style="font-size:13px;color:var(--muted);line-height:2.2;"></div></div>
+  </div>
+
+</main>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const ODOO_URL  = 'https://libertariocoffee.odoo.com';
+const ODOO_DB   = 'libertariocoffee';
+const ODOO_USER = 'admin';
+const ODOO_KEY  = '94641b8482a7fb0dff5249a9a2428735b32aee0e';
+
+const C = ['#2d7a4f','#c8841a','#2563aa','#8b3a8b','#c0392b','#1a7a7a','#8b6914','#b5451b','#1d6fa4','#6b4c9a'];
+const GR = 'rgba(0,0,0,0.07)';
+const TC = '#6b6860';
+const fm  = v => '$'+(v/1e6).toFixed(1)+'M';
+const fmK = v => v>=1e6?'$'+(v/1e6).toFixed(1)+'M':v>=1e3?'$'+(v/1e3).toFixed(0)+'K':'$'+Math.round(v).toLocaleString('es-CO');
+const baseOpts = {responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+
+// Stored chart refs for destroy/recreate
+const charts = {};
+
+function go(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+function setLoad(msg, detail=''){
+  document.getElementById('loadMsg').textContent = msg;
+  document.getElementById('loadDetail').textContent = detail;
+}
+function hideLoad(){ document.getElementById('loadingOverlay').classList.add('hidden'); }
+function showError(msg){
+  document.getElementById('errorBanner').style.display='block';
+  document.getElementById('errorMsg').textContent = msg;
+}
+
+// ── ODOO JSON-RPC ─────────────────────────────────────────────────────────────
+async function odooCall(model, method, args, kwargs={}) {
+  const resp = await fetch(`${ODOO_URL}/web/dataset/call_kw`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      jsonrpc: '2.0', method: 'call', id: Date.now(),
+      params: {
+        model, method,
+        args, kwargs: { context: {lang:'es_CO', tz:'America/Bogota'}, ...kwargs }
+      }
+    })
+  });
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.data?.message || JSON.stringify(data.error));
+  return data.result;
+}
+
+async function odooAuth() {
+  const resp = await fetch(`${ODOO_URL}/web/session/authenticate`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    credentials: 'include',
+    body: JSON.stringify({
+      jsonrpc:'2.0', method:'call', id:1,
+      params: { db: ODOO_DB, login: ODOO_USER, password: ODOO_KEY }
+    })
+  });
+  const data = await resp.json();
+  if (!data.result?.uid) throw new Error('Autenticación fallida. Verifica usuario y API Key.');
+  return data.result.uid;
+}
+
+// ── DATE HELPERS ──────────────────────────────────────────────────────────────
+function dateStr(d){ return d.toISOString().slice(0,10)+' 00:00:00'; }
+function today(){ return new Date(); }
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d; }
+function monthStart(offset=0){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+offset); return d; }
+function monthEnd(offset=0){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+offset+1); d.setDate(d.getDate()-1); return d; }
+
+// ── FETCH DATA FROM ODOO ──────────────────────────────────────────────────────
+let globalData = {};
+
+async function fetchAll() {
+  setLoad('Autenticando...', ODOO_URL);
+  await odooAuth();
+
+  // Date ranges
+  const now      = today();
+  const m0Start  = dateStr(monthStart(0));   // current month start
+  const m0End    = dateStr(monthEnd(0));
+  const m1Start  = dateStr(monthStart(-1));
+  const m1End    = dateStr(monthEnd(-1));
+  const m2Start  = dateStr(monthStart(-2));
+  const m2End    = dateStr(monthEnd(-2));
+  const d90Start = dateStr(daysAgo(90));
+  const d30Start = dateStr(daysAgo(30));
+
+  // ── 1. POS Orders - current month ──────────────────────────────────────────
+  setLoad('Cargando órdenes del mes actual...');
+  const ordersM0 = await odooCall('pos.order', 'search_read',
+    [[['date_order','>=',m0Start],['date_order','<=',m0End],['state','in',['done','invoiced']]]],
+    {fields:['name','date_order','amount_total','session_id','config_id'], limit:5000}
+  );
+
+  // ── 2. POS Orders - last 2 months ──────────────────────────────────────────
+  setLoad('Cargando historial de ventas...');
+  const ordersM1 = await odooCall('pos.order', 'search_read',
+    [[['date_order','>=',m1Start],['date_order','<=',m1End],['state','in',['done','invoiced']]]],
+    {fields:['name','date_order','amount_total','config_id'], limit:5000}
+  );
+  const ordersM2 = await odooCall('pos.order', 'search_read',
+    [[['date_order','>=',m2Start],['date_order','<=',m2End],['state','in',['done','invoiced']]]],
+    {fields:['name','date_order','amount_total','config_id'], limit:5000}
+  );
+
+  // ── 3. Order lines - current month (for products) ──────────────────────────
+  setLoad('Cargando líneas de productos...');
+  const lines = await odooCall('pos.order.line', 'search_read',
+    [[['order_id.date_order','>=',m0Start],['order_id.date_order','<=',m0End],['order_id.state','in',['done','invoiced']]]],
+    {fields:['product_id','qty','price_subtotal_incl','order_id'], limit:20000}
+  );
+
+  // ── 4. POS Configs (stores) ────────────────────────────────────────────────
+  setLoad('Cargando puntos de venta...');
+  const configs = await odooCall('pos.config', 'search_read',
+    [[['active','=',true]]],
+    {fields:['id','name','display_name']}
+  );
+
+  // ── 5. Products + categories ───────────────────────────────────────────────
+  setLoad('Cargando productos y categorías...');
+  const prodIds = [...new Set(lines.map(l=>l.product_id[0]))];
+  let products = [];
+  if (prodIds.length > 0) {
+    products = await odooCall('product.product', 'search_read',
+      [[['id','in',prodIds]]],
+      {fields:['id','name','categ_id','pos_categ_id']}
+    );
+  }
+
+  // ── 6. Daily sales last 90 days ────────────────────────────────────────────
+  setLoad('Cargando tendencia diaria...');
+  const orders90 = await odooCall('pos.order', 'search_read',
+    [[['date_order','>=',d90Start],['state','in',['done','invoiced']]]],
+    {fields:['date_order','amount_total'], limit:20000}
+  );
+
+  globalData = { ordersM0, ordersM1, ordersM2, lines, configs, products, orders90,
+    months: {
+      m0: { start: m0Start, label: now.toLocaleString('es-CO',{month:'long',year:'numeric'}) },
+      m1: { label: new Date(monthStart(-1)).toLocaleString('es-CO',{month:'long'}) },
+      m2: { label: new Date(monthStart(-2)).toLocaleString('es-CO',{month:'long'}) },
+    }
+  };
+}
+
+// ── PROCESS & RENDER ──────────────────────────────────────────────────────────
+function processAndRender() {
+  const { ordersM0, ordersM1, ordersM2, lines, configs, products, orders90, months } = globalData;
+
+  // Map config id → name
+  const cfgMap = {};
+  configs.forEach(c => cfgMap[c.id] = c.name.replace(/\(Tienda.*?\)/,'').trim());
+
+  // ── Sales by store ──────────────────────────────────────────────────────────
+  function salesByStore(orders) {
+    const s = {};
+    orders.forEach(o => {
+      const name = cfgMap[o.config_id[0]] || o.config_id[1] || 'Otro';
+      s[name] = (s[name]||0) + o.amount_total;
+    });
+    return s;
+  }
+  const storeM0 = salesByStore(ordersM0);
+  const storeM1 = salesByStore(ordersM1);
+  const storeM2 = salesByStore(ordersM2);
+  const allStores = [...new Set([...Object.keys(storeM0),...Object.keys(storeM1),...Object.keys(storeM2)])].sort((a,b)=>(storeM0[b]||0)-(storeM0[a]||0));
+
+  // ── Sales by product ────────────────────────────────────────────────────────
+  const prodMap = {};
+  products.forEach(p => prodMap[p.id] = p);
+  const prodSales = {};
+  lines.forEach(l => {
+    const pid = l.product_id[0];
+    const pname = l.product_id[1];
+    if (!prodSales[pid]) prodSales[pid] = { name: pname, qty:0, total:0, categ:'' };
+    prodSales[pid].qty   += l.qty;
+    prodSales[pid].total += l.price_subtotal_incl;
+    if (prodMap[pid]) {
+      prodSales[pid].categ = prodMap[pid].pos_categ_id ? prodMap[pid].pos_categ_id[1] : (prodMap[pid].categ_id ? prodMap[pid].categ_id[1] : 'Sin categoría');
+    }
+  });
+  const topByRevenue = Object.values(prodSales).filter(p=>p.categ!=='Sin categoría'&&p.categ!=='').sort((a,b)=>b.total-a.total).slice(0,10);
+  const topByQty     = Object.values(prodSales).filter(p=>p.categ!=='Sin categoría'&&p.categ!=='').sort((a,b)=>b.qty-a.qty).slice(0,10);
+
+  // ── Sales by category ───────────────────────────────────────────────────────
+  const catSales = {};
+  Object.values(prodSales).forEach(p => {
+    if (!p.categ || p.categ==='Sin categoría') return;
+    if (!catSales[p.categ]) catSales[p.categ] = { total:0, qty:0, prods:[] };
+    catSales[p.categ].total += p.total;
+    catSales[p.categ].qty   += p.qty;
+    catSales[p.categ].prods.push(p);
+  });
+  const cats = Object.keys(catSales).sort((a,b)=>catSales[b].total-catSales[a].total);
+
+  // ── Daily sales ─────────────────────────────────────────────────────────────
+  const dailyMap = {};
+  orders90.forEach(o => {
+    const day = o.date_order.slice(0,10);
+    dailyMap[day] = (dailyMap[day]||0) + o.amount_total;
+  });
+  const dailyDates = Object.keys(dailyMap).sort();
+  const dailyVals  = dailyDates.map(d=>dailyMap[d]);
+
+  // ── Totals ──────────────────────────────────────────────────────────────────
+  const totalM0 = ordersM0.reduce((a,o)=>a+o.amount_total,0);
+  const totalM1 = ordersM1.reduce((a,o)=>a+o.amount_total,0);
+  const totalM2 = ordersM2.reduce((a,o)=>a+o.amount_total,0);
+  const totalCatM0 = Object.values(catSales).reduce((a,c)=>a+c.total,0);
+  const varMvsM = totalM1>0?((totalM0-totalM1)/totalM1*100).toFixed(1):0;
+
+  // ── UPDATE LAST UPDATED ─────────────────────────────────────────────────────
+  document.getElementById('lastUpdated').textContent = 'Actualizado: '+new Date().toLocaleTimeString('es-CO');
+
+  // ── UPDATE PRESUPUESTO REAL ─────────────────────────────────────────────────
+  document.getElementById('pptoReal').textContent = fm(totalM0);
+  window._realVentas = totalM0;
+  calcP();
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // RESUMEN
+  // ══════════════════════════════════════════════════════════════════════════
+  document.getElementById('resumenSub').textContent = `${months.m0.label} · ${allStores.length} puntos de venta · datos en vivo`;
+  document.getElementById('resumenCards').innerHTML = `
+    <div class="card"><div class="lbl">Ventas mes actual</div><div class="val">${fm(totalM0)}</div><div class="sub">${months.m0.label}</div><span class="bdg ${varMvsM>=0?'up':'dn'}">${varMvsM>0?'+':''}${varMvsM}% vs mes ant.</span></div>
+    <div class="card"><div class="lbl">Órdenes mes actual</div><div class="val">${ordersM0.length.toLocaleString('es-CO')}</div><div class="sub">transacciones</div></div>
+    <div class="card"><div class="lbl">Ticket promedio</div><div class="val">${ordersM0.length>0?'$'+Math.round(totalM0/ordersM0.length).toLocaleString('es-CO'):'—'}</div><div class="sub">por orden</div></div>
+    <div class="card"><div class="lbl">Mejor tienda</div><div class="val" style="font-size:16px">${allStores[0]||'—'}</div><div class="sub">${fm(storeM0[allStores[0]]||0)}</div><span class="bdg up">↑ top</span></div>
+    <div class="card"><div class="lbl">Mes anterior</div><div class="val">${fm(totalM1)}</div><div class="sub">${months.m1.label}</div></div>
+    <div class="card"><div class="lbl">Producto top</div><div class="val" style="font-size:14px">${topByRevenue[0]?.name.slice(0,18)||'—'}</div><div class="sub">${topByRevenue[0]?fm(topByRevenue[0].total):''}</div></div>
+  `;
+
+  // Store bar chart
+  mkChart('c_ti_bar',{type:'bar',data:{labels:allStores,datasets:[{data:allStores.map(s=>storeM0[s]||0),backgroundColor:C,borderRadius:5}]},options:{...baseOpts,indexAxis:'y',scales:{x:{ticks:{color:TC,font:{size:10},callback:v=>fm(v)},grid:{color:GR}},y:{ticks:{color:TC,font:{size:10}},grid:{display:false}}}}});
+
+  // Cat dona
+  const totC = cats.reduce((a,c)=>a+catSales[c].total,0);
+  document.getElementById('leg_dona').innerHTML = cats.slice(0,7).map((n,i)=>`<div style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:2px;background:${C[i]};flex-shrink:0"></span><span style="font-size:11px">${n}</span><span style="margin-left:auto;font-weight:700;font-size:11px">${Math.round(catSales[n].total/totC*100)}%</span></div>`).join('');
+  mkChart('c_cat_dona',{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>catSales[c].total),backgroundColor:C,borderWidth:0}]},options:{...baseOpts,cutout:'62%'}});
+
+  // Daily chart (30 days)
+  const d30 = dailyDates.slice(-30), d30v = d30.map(d=>dailyMap[d]);
+  mkChart('c_daily',{type:'line',data:{labels:d30.map(d=>d.slice(5)),datasets:[{data:d30v,borderColor:C[0],backgroundColor:'rgba(45,122,79,.08)',fill:true,tension:.35,pointRadius:2,borderWidth:2}]},options:{...baseOpts,scales:{x:{ticks:{color:TC,font:{size:9},maxRotation:45,autoSkip:true,maxTicksLimit:15},grid:{display:false}},y:{ticks:{color:TC,callback:v=>fm(v)},grid:{color:GR}}}}});
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TIENDAS
+  // ══════════════════════════════════════════════════════════════════════════
+  const tiB = document.getElementById('tiB'); tiB.innerHTML='';
+  const tiMax = Math.max(...allStores.map(s=>storeM0[s]||0));
+  allStores.forEach((s,i)=>{
+    const r=document.createElement('div');r.className='br';
+    r.innerHTML=`<span class="bn" title="${s}">${s}</span><div class="bb"><div class="bf" style="width:${Math.round((storeM0[s]||0)/tiMax*100)}%;background:${C[i%C.length]}"></div></div><span class="bv">${fm(storeM0[s]||0)}</span>`;
+    tiB.appendChild(r);
+  });
+
+  mkChart('cTi',{type:'bar',data:{labels:allStores,datasets:[
+    {label:months.m2.label,data:allStores.map(s=>storeM2[s]||0),backgroundColor:'rgba(45,122,79,.8)',borderRadius:3},
+    {label:months.m1.label,data:allStores.map(s=>storeM1[s]||0),backgroundColor:'rgba(200,132,26,.8)',borderRadius:3},
+    {label:months.m0.label,data:allStores.map(s=>storeM0[s]||0),backgroundColor:'rgba(37,99,170,.8)',borderRadius:3},
+  ]},options:{...baseOpts,indexAxis:'y',plugins:{legend:{display:true,labels:{color:TC,font:{size:11},boxWidth:10}}},scales:{x:{ticks:{color:TC,font:{size:10},callback:v=>fm(v)},grid:{color:GR}},y:{ticks:{color:TC,font:{size:10}},grid:{display:false}}}}});
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TOP 10
+  // ══════════════════════════════════════════════════════════════════════════
+  const catColor={};
+  cats.forEach((c,i)=>catColor[c]=C[i%C.length]);
+
+  document.getElementById('top10Cards').innerHTML=`
+    <div class="card"><div class="lbl">Top por ventas</div><div class="val" style="font-size:14px">${topByRevenue[0]?.name.slice(0,20)||'—'}</div><div class="sub">${topByRevenue[0]?fm(topByRevenue[0].total):''}</div><span class="bdg up">#1 COP</span></div>
+    <div class="card"><div class="lbl">Top por unidades</div><div class="val" style="font-size:14px">${topByQty[0]?.name.slice(0,20)||'—'}</div><div class="sub">${topByQty[0]?.qty.toLocaleString('es-CO')||''} unid</div><span class="bdg up">#1 vol.</span></div>
+    <div class="card"><div class="lbl">Productos vendidos</div><div class="val">${Object.keys(prodSales).length}</div><div class="sub">distintos este mes</div></div>
+  `;
+
+  function buildT(id, items, isCOP){
+    const tbl=document.getElementById(id);
+    tbl.innerHTML=`<thead><tr><th>#</th><th>Producto</th><th>Categoría</th><th class="r">${isCOP?'Ventas COP':'Unidades'}</th><th class="r">Ticket/unid</th></tr></thead>`;
+    const tb=document.createElement('tbody');
+    items.forEach((p,i)=>{
+      const cc=catColor[p.categ]||'#888';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;background:${C[i%C.length]}22;color:${C[i%C.length]}">${i+1}</span></td>
+        <td>${p.name.replace(/^\[.*?\]\s*/,'')}</td>
+        <td><span class="pill" style="background:${cc}22;color:${cc}">${p.categ||'—'}</span></td>
+        <td class="r" style="font-weight:700">${isCOP?fm(p.total):p.qty.toLocaleString('es-CO')}</td>
+        <td class="r">${p.qty>0?'$'+Math.round(p.total/p.qty).toLocaleString('es-CO'):'—'}</td>`;
+      tb.appendChild(tr);
+    });
+    tbl.appendChild(tb);
+  }
+  buildT('t10c', topByRevenue, true);
+  buildT('t10u', topByQty, false);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // CATEGORÍAS
+  // ══════════════════════════════════════════════════════════════════════════
+  const catBarsF = document.getElementById('catBarsF'); catBarsF.innerHTML='';
+  const catMax = catSales[cats[0]]?.total||1;
+  cats.forEach((n,i)=>{
+    const r=document.createElement('div');r.className='br';
+    r.innerHTML=`<span class="bn" title="${n}">${n}</span><div class="bb"><div class="bf" style="width:${Math.round(catSales[n].total/catMax*100)}%;background:${C[i%C.length]}"></div></div><span class="bv">${fm(catSales[n].total)}</span>`;
+    catBarsF.appendChild(r);
+  });
+  mkChart('cCU',{type:'bar',data:{labels:cats,datasets:[{data:cats.map(c=>catSales[c].qty),backgroundColor:cats.map((_,i)=>C[i%C.length]),borderRadius:5}]},options:{...baseOpts,scales:{x:{ticks:{color:TC,font:{size:10},maxRotation:25},grid:{display:false}},y:{ticks:{color:TC},grid:{color:GR}}}}});
+  mkChart('cCatDona2',{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>catSales[c].total),backgroundColor:cats.map((_,i)=>C[i%C.length]),borderWidth:0}]},options:{...baseOpts,cutout:'55%',plugins:{legend:{display:true,position:'right',labels:{color:TC,font:{size:10},boxWidth:10}}}}});
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TOP POR CATEGORÍA — build buttons dynamically
+  // ══════════════════════════════════════════════════════════════════════════
+  const catTabsEl = document.getElementById('catTabs');
+  catTabsEl.innerHTML='';
+  const emojis = ['🥚','🍰','🥪','🍞','🫓','☀️','🥗','☕','🍫','🥗'];
+  cats.forEach((cat,i)=>{
+    const btn=document.createElement('button');
+    btn.className='cat-btn'+(i===0?' active':'');
+    btn.style.background=C[i%C.length];
+    btn.textContent=`${emojis[i]||'▪'} ${cat}`;
+    btn.onclick=()=>showCatLive(cat,btn,catSales,catColor);
+    catTabsEl.appendChild(btn);
+  });
+  if(cats.length>0) showCatLive(cats[0], catTabsEl.children[0], catSales, catColor);
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // TENDENCIA
+  // ══════════════════════════════════════════════════════════════════════════
+  mkChart('cTnd90',{type:'line',data:{labels:dailyDates.map(d=>d.slice(5)),datasets:[{data:dailyVals,borderColor:C[0],backgroundColor:'rgba(45,122,79,.08)',fill:true,tension:.35,pointRadius:1,borderWidth:2}]},options:{...baseOpts,scales:{x:{ticks:{color:TC,font:{size:9},maxRotation:45,autoSkip:true,maxTicksLimit:20},grid:{display:false}},y:{ticks:{color:TC,callback:v=>fm(v)},grid:{color:GR}}}}});
+
+  const vM=allStores.map(s=>storeM1[s]>0?+((( storeM0[s]||0)-(storeM1[s]||0))/(storeM1[s]||1)*100).toFixed(1):0);
+  mkChart('cVar',{type:'bar',data:{labels:allStores,datasets:[{label:'Mes actual vs anterior',data:vM,backgroundColor:vM.map(v=>v>=0?'rgba(45,122,79,.8)':'rgba(192,57,43,.8)'),borderRadius:4}]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:TC,font:{size:11},boxWidth:10}}},scales:{x:{ticks:{color:TC,font:{size:10},maxRotation:35},grid:{display:false}},y:{ticks:{color:TC,callback:v=>v+'%'},grid:{color:GR}}}}});
+
+  document.getElementById('tRes').innerHTML = allStores.map((s,i)=>{
+    const v=vM[i]; return `<div>${v>=0?'↑':'↓'} <strong>${s}</strong>: ${v>0?'+':''}${v}% — mes actual vs anterior</div>`;
+  }).join('');
+
+  // Presupuesto mes chart
+  mkChart('cPpMes',{type:'bar',data:{labels:[months.m2.label,months.m1.label,months.m0.label],datasets:[
+    {label:'Ventas reales',data:[totalM2,totalM1,totalM0],backgroundColor:'rgba(45,122,79,.85)',borderRadius:5},
+    {label:'Presupuesto',  data:[0,0,0],backgroundColor:'rgba(200,132,26,.4)',borderRadius:5}
+  ]},options:{...baseOpts,plugins:{legend:{display:true,labels:{color:TC,font:{size:11},boxWidth:10}}},scales:{x:{ticks:{color:TC},grid:{display:false}},y:{ticks:{color:TC,callback:v=>fm(v)},grid:{color:GR}}}}});
+  window._ppMesChart = charts['cPpMes'];
+}
+
+// ── TOP POR CATEGORÍA (live) ──────────────────────────────────────────────────
+let chartCatProd=null, chartCatUnidP=null;
+function showCatLive(catName, btn, catSales, catColor) {
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const d = catSales[catName];
+  if (!d) return;
+  document.getElementById('catPanelTitle').textContent = catName + ' — mes actual';
+  const prods = d.prods.sort((a,b)=>b.total-a.total).slice(0,8);
+  const cc = catColor[catName]||'#888';
+
+  // Summary cards
+  const topP=prods[0]||{};
+  document.getElementById('catSummaryCards').innerHTML=`
+    <div class="card"><div class="lbl">Ventas categoría</div><div class="val">${fm(d.total)}</div><div class="sub">mes actual</div></div>
+    <div class="card"><div class="lbl">Unidades</div><div class="val">${d.qty.toLocaleString('es-CO')}</div></div>
+    <div class="card"><div class="lbl">Ticket prom.</div><div class="val">${d.qty>0?'$'+Math.round(d.total/d.qty).toLocaleString('es-CO'):'—'}</div></div>
+    <div class="card"><div class="lbl">Producto #1</div><div class="val" style="font-size:13px">${(topP.name||'—').replace(/^\[.*?\]\s*/,'').slice(0,22)}</div><div class="sub">${topP.total?fm(topP.total):''}</div></div>
+    <div class="card"><div class="lbl">Productos</div><div class="val">${d.prods.length}</div></div>`;
+
+  const labels = prods.map(p=>p.name.replace(/^\[.*?\]\s*/,'').slice(0,28));
+  const barC = prods.map((_,i)=>i===0?cc:cc+'99');
+
+  if(chartCatProd){chartCatProd.destroy();chartCatProd=null;}
+  if(chartCatUnidP){chartCatUnidP.destroy();chartCatUnidP=null;}
+  chartCatProd  = new Chart(document.getElementById('cCatProd'),  {type:'bar',data:{labels,datasets:[{data:prods.map(p=>p.total),backgroundColor:barC,borderRadius:5}]},options:{...baseOpts,indexAxis:'y',scales:{x:{ticks:{color:TC,font:{size:10},callback:v=>fm(v)},grid:{color:GR}},y:{ticks:{color:TC,font:{size:10}},grid:{display:false}}}}});
+  chartCatUnidP = new Chart(document.getElementById('cCatUnidProd'),{type:'bar',data:{labels,datasets:[{data:prods.map(p=>p.qty),backgroundColor:barC,borderRadius:5}]},options:{...baseOpts,indexAxis:'y',scales:{x:{ticks:{color:TC},grid:{color:GR}},y:{ticks:{color:TC,font:{size:10}},grid:{display:false}}}}});
+
+  // Detail table
+  const tbl=document.getElementById('tCatDetail');
+  tbl.innerHTML=`<thead><tr><th>#</th><th>Producto</th><th class="r">Unidades</th><th class="r">Ventas COP</th><th class="r">Ticket/unid</th></tr></thead>`;
+  const tb=document.createElement('tbody');
+  prods.forEach((p,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;background:${cc}22;color:${cc}">${i+1}</span></td>
+      <td style="font-weight:${i===0?'600':'400'}">${p.name.replace(/^\[.*?\]\s*/,'')}</td>
+      <td class="r">${p.qty.toLocaleString('es-CO')}</td>
+      <td class="r" style="font-weight:600">${fm(p.total)}</td>
+      <td class="r">${p.qty>0?'$'+Math.round(p.total/p.qty).toLocaleString('es-CO'):'—'}</td>`;
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb);
+}
+
+// ── CHART HELPER ──────────────────────────────────────────────────────────────
+function mkChart(id, cfg) {
+  if (charts[id]) { charts[id].destroy(); }
+  const el = document.getElementById(id);
+  if (!el) return;
+  charts[id] = new Chart(el, cfg);
+}
+
+// ── PRESUPUESTO ───────────────────────────────────────────────────────────────
+function calcP(){
+  const raw = parseFloat(document.getElementById('ppI').value);
+  const real = window._realVentas || 0;
+  if(isNaN(raw)||raw<=0){
+    ['pV','pPct','pDf'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('pBar').style.width='0%'; return;
+  }
+  const obj=raw*1e6, pct=Math.min(real/obj*100,200), df=real-obj;
+  document.getElementById('pV').textContent='$'+(raw>=1000?(raw/1000).toFixed(1)+'B':raw.toFixed(0)+'M');
+  document.getElementById('pPct').textContent=pct.toFixed(1)+'%';
+  document.getElementById('pSt').textContent=pct>=100?'✓ meta alcanzada':'en progreso';
+  document.getElementById('pDf').textContent=(df>=0?'+':'')+fm(Math.abs(df));
+  document.getElementById('pDs').textContent=df>=0?'sobre objetivo':'por debajo';
+  document.getElementById('pBar').style.width=Math.min(pct,100)+'%';
+  document.getElementById('pBar').style.background=pct>=100?'var(--green)':'var(--accent)';
+  document.getElementById('pLb').textContent=`Progreso: ${pct.toFixed(1)}%`;
+  document.getElementById('pMid').textContent='$'+(raw/2).toFixed(0)+'M';
+  document.getElementById('pMax').textContent='$'+raw.toFixed(0)+'M';
+  if(window._ppMesChart){
+    window._ppMesChart.data.datasets[1].data=[Math.round(obj*.32),Math.round(obj*.32),Math.round(obj*.36)];
+    window._ppMesChart.update();
+  }
+}
+
+// ── RELOAD ────────────────────────────────────────────────────────────────────
+async function reloadData() {
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+  document.getElementById('errorBanner').style.display='none';
+  try {
+    await fetchAll();
+    processAndRender();
+    hideLoad();
+  } catch(e) {
+    hideLoad();
+    showError(e.message);
+    console.error(e);
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+reloadData();
+</script>
+</body>
+</html>
